@@ -1,0 +1,67 @@
+# Basic Linux Kernel Module (`first`)
+
+A minimal out-of-tree Linux Kernel Module (LKM) demonstrating module initialization, cleanup, and building with the Linux Kbuild system.
+
+## Prerequisites
+
+Install the build toolchain and kernel headers matching your running kernel (Debian/Ubuntu):
+
+```bash
+sudo apt update
+sudo apt install build-essential linux-headers-$(uname -r)
+```
+
+## File Structure
+
+- `first.c` — Kernel module source implementing init and exit hooks.
+- `Makefile` — Out-of-tree Kbuild configuration producing `first.ko`.
+
+## How It Works
+
+1. **`first_init` (`__init`)**: Registered via `module_init()`. Runs when the module is inserted into the kernel, logs a message to the kernel ring buffer via `printk()`, and returns `0` on success.
+2. **`first_exit` (`__exit`)**: Registered via `module_exit()`. Runs when the module is removed from the kernel and logs a cleanup message.
+3. **`MODULE_LICENSE("GPL")`**: Declares GPL compliance to prevent kernel tainting and allow access to GPL-only kernel symbols.
+
+## Build, Load & Verify
+
+### 1. Compile the module
+```bash
+make
+```
+This invokes the kernel's Kbuild system and generates `first.ko`.
+
+### 2. Insert the module into the kernel
+```bash
+sudo insmod first.ko
+```
+
+### 3. Verify it loaded and check kernel logs
+```bash
+lsmod | grep first
+sudo dmesg | tail -n 5
+```
+Expected log output:
+```text
+I am in init module
+```
+
+### 4. Unload the module
+```bash
+sudo rmmod first
+sudo dmesg | tail -n 5
+```
+Expected log output:
+```text
+I am in cleanup module
+```
+
+### 5. Clean build artifacts
+```bash
+make clean
+```
+
+### (Optional) Install system-wide
+```bash
+sudo make modules_install
+```
+Installs `first.ko` under `/lib/modules/$(uname -r)/` and updates module dependencies with `depmod -a`.
